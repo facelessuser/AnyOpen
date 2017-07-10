@@ -32,9 +32,26 @@ Multiple entries can be defined and you can limit them to a specific platform:
 
 Commands can either be specified as an array of parameters, or as a string. Arrays directly create the process, while strings are executed as shell commands (what you specify is sent directly to your systems shell). While in most cases this may not matter, sometimes it does. Especially on Windows.
 
+### Filtering
+
+If placing entry in `Side Bar.sublime-menu`, you may have a need to exclude folders.  When defining your entry add the option `exclude_folders` and set it to `true`, and it will not show up in the side bar context menu.
+
+If you only need to show the menu on certain file types, add the `filter` parameter and give it an array of extensions. Specify them as lowercase as when the file is compared, it will be forced to lowercase.
+
+
+```js
+    "osx_gimp": {
+        "caption": "Gimp Here…",
+        "cmd": ["/Applications/Gimp.app/Contents/MacOS/gimp-2.8", "${PATH}"],
+        "platform": ["osx"],
+        "exclude_folders": true,
+        "filter": [".png", ".bmp", ".gif", ".jpg", ".jpeg", ".xcf"]
+    },
+```
+
 ### Windows and the Shell Command
 
-In the example above, you will notice [grepWin](http://stefanstools.sourceforge.net/grepWin.html) (a Windows application) is specified as a shell command. This is because grepWin will not parse spaces in the option `/searchpath:` if we create the process directly. And there is no real way to escape the spaces so they pass in normally. It must be run via a shell command, or indirectly called through a batch file.
+In the example above, you will notice [grepWin](http://stefanstools.sourceforge.net/grepWin.html) (a Windows application) is specified as a shell command. This is because grepWin will not parse spaces in the option `/searchpath:` if we create the process directly. And there is no real way to escape the spaces so they pass in normally. For this program, the command must be run via a shell command, or indirectly through a batch file.
 
 When running a shell command, AnyOpen expects that the `${PATH}` parameter will be enclosed in double quotes and will escape double quotes when injecting the file or folder path into a shell command. When specified as an array of parameters, you do not have to quote `${PATH}`.
 
