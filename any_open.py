@@ -1,25 +1,24 @@
 r"""
-GrepHere Sublime Plugin.
+AnyOpen Sublime Plugin.
 
-Sends a sidebar path or current view path to your favorite grep gui program.
-Multiple entries can be defined and you can limit them to a specific platform:
+Sends a sidebar path or current view path to your favorite program.
+Multiple entries can be defined and you can limit them to a specific platform or file types.
 
 ```js
-    "grep_call": {
+    "open_with": {
         "win": {
-            "caption": "Grep Here...",
-            "cmd": ["C:\\Program Files\\grepWin\\grepWin.exe", "/searchpath:${PATH}"],
-            // On windows, optionally use `"hide_window": true` to hide window.
+            "caption": "Grep Here…",
+            "cmd": "\"C:\\Program Files\\grepWin\\grepWin.exe\" /searchpath:\"${PATH}\"",
             "platform": ["windows"]
         },
         "win_rummage": {
-            "caption": "Rummage Here...",
-            "cmd": ["C:\\Program Files (x86)\\Rummage\\Rummage.exe", "-s", ":${PATH}"],
+            "caption": "Rummage Here…",
+            "cmd": ["c:\\Python35\\pythonw.exe", "-m", "rummage", "--path", "${PATH}"],
             "platform": ["windows"]
         },
         "osx": {
-            "caption": "Rummage Here...",
-            "cmd": ["/Applications/Rummage.app/Contents/MacOS/Rummage", "-s", "${PATH}"],
+            "caption": "Rummage Here…",
+            "cmd": ["rummage", "--path", "${PATH}"],
             "platform": ["osx"]
         }
     }
@@ -29,17 +28,17 @@ You can then define actual commands for the context menu or sidebar context menu
 
     Context menu:
     ```js
-        {"command": "grep_here_file", "args": {"key": "osx"}},
-        {"command": "grep_here_file", "args": {"key": "win"}},
-        {"command": "grep_here_file", "args": {"key": "win_rummage"}},
+        {"command": "any_open_file", "args": {"key": "osx"}},
+        {"command": "any_open_file", "args": {"key": "win"}},
+        {"command": "any_open_file", "args": {"key": "win_rummage"}},
     ```
 
     Sidebar menu:
 
     ```js
-        {"command": "grep_here_folder", "args": {"paths": [], "key": "osx"}},
-        {"command": "grep_here_folder", "args": {"paths": [], "key": "win"}},
-        {"command": "grep_here_folder", "args": {"paths": [], "key": "win_rummage"}}
+        {"command": "any_open_folder", "args": {"paths": [], "key": "osx"}},
+        {"command": "any_open_folder", "args": {"paths": [], "key": "win"}},
+        {"command": "any_open_folder", "args": {"paths": [], "key": "win_rummage"}}
     ```
 
 Licensed under MIT
@@ -62,11 +61,11 @@ DEALINGS IN THE SOFTWARE.
 import sublime_plugin
 import sublime
 import subprocess
-from os.path import exists
+import os
 import traceback
 import sys
 
-NO_GREP = "Nothing to grep!"
+NO_OPEN = "Nothing to open!"
 CALL_FAILURE = "SubProcess Error:\n%s"
 
 if sys.platform.startswith('win'):
@@ -103,49 +102,8 @@ def get_environ():
     return env
 
 
-class GrepHereBase(object):
-    """Grep Base class."""
-
-    def fail(self, msg, alert=True):
-        """Display failure."""
-
-        if alert:
-            sublime.error_message(msg)
-        else:
-            print("GrepHere: %s" % msg)
-
-    def call_grep(self, target, key):
-        """Call grep program."""
-
-        call = None
-        setting = sublime.load_settings("grep_here.sublime-settings").get('grep_call', {})
-        obj = setting.get(key, None)
-        if obj is not None:
-            call = obj.get('cmd', [])
-            hide_window = obj.get('hide_window', False)
-        if call is not None:
-            is_string = isinstance(call, str)
-            if is_string:
-                call = call.replace("${PATH}", target.replace('"', '\"'))
-            else:
-                index = 0
-                for item in call:
-                    call[index] = item.replace("${PATH}", target) 
-                    index += 1
-            try:
-                if sublime.platform() == "windows":
-                    startupinfo = subprocess.STARTUPINFO()
-                    if hide_window:
-                        startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-                    subprocess.Popen(call, startupinfo=startupinfo, env=get_environ(), shell=is_string)
-                else:
-                    subprocess.Popen(call, env=get_environ(), shell=is_string)
-            except Exception:
-                self.fail(CALL_FAILURE % str(traceback.format_exc()))
-
-
-class GrepHere(GrepHereBase):
-    """Grep Here."""
+class AnyOpen(object):
+    """AnyOpen Here."""
 
     def is_text_cmd(self):
         """Detect if TextCommand."""
@@ -157,16 +115,24 @@ class GrepHere(GrepHereBase):
 
         return isinstance(self, sublime_plugin.WindowCommand)
 
+    def fail(self, msg, alert=True):
+        """Display failure."""
+
+        if alert:
+            sublime.error_message(msg)
+        else:
+            print("AnyOpen: %s" % msg)
+
     def get_target(self, paths=None):
         """Get the target."""
 
         target = None
-        fail_msg = NO_GREP
+        fail_msg = NO_OPEN
         if paths:
             target = paths[0]
         elif self.is_text_cmd():
             filename = self.view.file_name()
-            if filename is not None and exists(filename):
+            if filename is not None and os.path.exists(filename):
                 target = filename
             else:
                 self.fail(fail_msg)
@@ -174,8 +140,38 @@ class GrepHere(GrepHereBase):
             self.fail(fail_msg)
         return target
 
-    def grep(self, paths=None, key=None):
-        """Call grep program."""
+    def execute(self, target, key):
+        """Execute command."""
+
+        call = None
+        setting = sublime.load_settings("any_open.sublime-settings").get('open_with', {})
+        obj = setting.get(key, None)
+        if obj is not None:
+            call = obj.get('cmd', [])
+            hide_window = obj.get('hide_window', False)
+        if call is not None:
+            is_string = isinstance(call, str)
+            if is_string:
+                call = call.replace("${PATH}", target.replace('"', '\"'))
+            else:
+                index = 0
+                for item in call:
+                    call[index] = item.replace("${PATH}", target)
+                    index += 1
+            try:
+                if sublime.platform() == "windows":
+                    startupinfo = subprocess.STARTUPINFO()
+                    if hide_window:
+                        startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+                    subprocess.Popen(call, startupinfo=startupinfo, env=get_environ(), shell=is_string)
+                else:
+                    subprocess.Popen(call, env=get_environ(), shell=is_string)
+            except Exception:
+                self.fail("AnyOpen failed to open '%s'" % target, True)
+                self.fail(CALL_FAILURE % str(traceback.format_exc()))
+
+    def open_with(self, paths=None, key=None):
+        """Call program."""
 
         if key is None:
             return
@@ -183,23 +179,23 @@ class GrepHere(GrepHereBase):
         if target is None:
             return
 
-        self.call_grep(target, key)
+        self.execute(target, key)
 
 
-class GrepHereFileCommand(sublime_plugin.TextCommand, GrepHere):
-    """Grep the file."""
+class AnyOpenFileCommand(sublime_plugin.TextCommand, AnyOpen):
+    """Open the file."""
 
     def run(self, edit, key):
         """Run the command."""
 
-        self.grep(paths=None, key=key)
+        self.open_with(paths=None, key=key)
 
     def description(self, key=None):
         """Get command description."""
 
         caption = None
         if key is not None:
-            setting = sublime.load_settings("grep_here.sublime-settings").get('grep_call', {})
+            setting = sublime.load_settings("any_open.sublime-settings").get('open_with', {})
             obj = setting.get(key, None)
             if obj is not None:
                 caption = obj.get('caption', None)
@@ -210,32 +206,37 @@ class GrepHereFileCommand(sublime_plugin.TextCommand, GrepHere):
 
         enabled = False
         if key is not None:
-            setting = sublime.load_settings("grep_here.sublime-settings").get('grep_call', {})
+            setting = sublime.load_settings("any_open.sublime-settings").get('open_with', {})
             obj = setting.get(key, None)
             if key is not None and obj is not None:
                 platform = obj.get('platform', [])
                 if len(platform):
                     if '*' in platform or sublime.platform() in platform:
-                        enabled = True
+                        filename = self.view.file_name()
+                        file_filter = tuple(obj.get('filter', []))
+                        if not file_filter:
+                            enabled = True
+                        elif filename is not None and filename.lower().endswith(file_filter):
+                            enabled = True
         return enabled
 
     is_visible = is_enabled
 
 
-class GrepHereFolderCommand(sublime_plugin.WindowCommand, GrepHere):
-    """Grep the folder."""
+class AnyOpenFolderCommand(sublime_plugin.WindowCommand, AnyOpen):
+    """Open the folder."""
 
     def run(self, paths=None, key=None):
         """Run the command."""
 
-        self.grep(paths=paths, key=key)
+        self.open_with(paths=paths, key=key)
 
     def description(self, paths=None, key=None):
         """Get command description."""
 
         caption = None
         if key is not None:
-            setting = sublime.load_settings("grep_here.sublime-settings").get('grep_call', {})
+            setting = sublime.load_settings("any_open.sublime-settings").get('open_with', {})
             obj = setting.get(key, None)
             if obj is not None:
                 caption = obj.get('caption', None)
@@ -246,13 +247,22 @@ class GrepHereFolderCommand(sublime_plugin.WindowCommand, GrepHere):
 
         enabled = False
         if key is not None:
-            setting = sublime.load_settings("grep_here.sublime-settings").get('grep_call', {})
+            setting = sublime.load_settings("any_open.sublime-settings").get('open_with', {})
             obj = setting.get(key, None)
             if key is not None and obj is not None:
                 platform = obj.get('platform', [])
                 if len(platform):
                     if '*' in platform or sublime.platform() in platform:
-                        enabled = True
+                        is_dir = os.path.isdir(paths[0])
+                        if is_dir and not obj.get('exclude_folders', False):
+                            enabled = True
+                        elif not is_dir:
+                            filename = paths[0]
+                            file_filter = tuple(obj.get('filter', []))
+                            if not file_filter:
+                                enabled = True
+                            elif filename is not None and filename.lower().endswith(file_filter):
+                                enabled = True
         return enabled
 
     is_visible = is_enabled
