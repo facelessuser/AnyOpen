@@ -14,12 +14,12 @@ Multiple entries can be defined and you can limit them to a specific platform:
     "grep_call": {
         "win": {
             "caption": "Grep Here…",
-            "cmd": ["C:\\Program Files\\grepWin\\grepWin.exe", "/searchpath:${PATH}"],
+            "cmd": "\"C:\\Program Files\\grepWin\\grepWin.exe\" /searchpath:\"${PATH}\"",
             "platform": ["windows"]
         },
         "win_rummage": {
             "caption": "Rummage Here…",
-            "cmd": ["c:\\Python35\\python.exe", "-m", "rummage", "--path", "${PATH}"],
+            "cmd": ["c:\\Python35\\pythonw.exe", "-m", "rummage", "--path", "${PATH}"],
             "platform": ["windows"]
         },
         "osx": {
@@ -30,27 +30,7 @@ Multiple entries can be defined and you can limit them to a specific platform:
     }
 ```
 
-Keep in mind that on windows, passing quoted paths to some applications in Python can turn out poorly (it all depends on the application receiving the paths). For example, [grepWin](http://stefanstools.sourceforge.net/grepWin.html) on windows doesn't work well due to the way it parses its command line arguments and the way Python is sending them in this plugin.  So in this case, using a batch file is probably preferable as shown below:
-
-Batch file:
-
-```batch
-"C:\Program Files\grepWin\grepWin.exe" /searchpath:%1
-```
-
-GrepHere configuration:
-
-```js
-    "win": {
-        "caption": "Grep Here…",
-        "cmd": ["C:\\MyPath\\grepwin.bat", "${PATH}"],
-        // Hide the batch file window, but the exe should
-        // get shown as it is a separate process.
-        // This is a Windows only option.
-        "hide_window": true,
-        "platform": ["windows"]
-    },
-```
+On windows, you may need to specify your command as a string instead of a list if it isn't reading the arguments proper.  When specifying a string, Python will launch the command as a shell command. In the example above, [grepWin](http://stefanstools.sourceforge.net/grepWin.html) will not take a path with spaces if not a shell command, while the Python module Rummage has no issues.  To get grepWin to work, we specify the command as a string to issue the command as a shell command.  GrepHere will escape double quotes of the file or folder path when inserting it into the command.
 
 ## Commands
 

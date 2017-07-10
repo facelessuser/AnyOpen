@@ -124,18 +124,22 @@ class GrepHereBase(object):
             call = obj.get('cmd', [])
             hide_window = obj.get('hide_window', False)
         if call is not None:
-            index = 0
-            for item in call:
-                call[index] = item.replace("${PATH}", target)
-                index += 1
+            is_string = isinstance(call, str)
+            if is_string:
+                call = call.replace("${PATH}", target.replace('"', '\"'))
+            else:
+                index = 0
+                for item in call:
+                    call[index] = item.replace("${PATH}", target) 
+                    index += 1
             try:
                 if sublime.platform() == "windows":
                     startupinfo = subprocess.STARTUPINFO()
                     if hide_window:
                         startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-                    subprocess.Popen(call, startupinfo=startupinfo, env=get_environ())
+                    subprocess.Popen(call, startupinfo=startupinfo, env=get_environ(), shell=is_string)
                 else:
-                    subprocess.Popen(call, env=get_environ())
+                    subprocess.Popen(call, env=get_environ(), shell=is_string)
             except Exception:
                 self.fail(CALL_FAILURE % str(traceback.format_exc()))
 
