@@ -64,7 +64,12 @@ import subprocess
 import os
 import traceback
 import sys
+import datetime
+import time
+import json
+import codecs
 
+MENU_PATH = "Packages/User/AnyOpen"
 NO_OPEN = "Nothing to open!"
 CALL_FAILURE = "SubProcess Error:\n%s"
 
@@ -266,3 +271,92 @@ class AnyOpenFolderCommand(sublime_plugin.WindowCommand, AnyOpen):
         return enabled
 
     is_visible = is_enabled
+
+
+def reload_menus():
+    """Reload."""
+
+    menu = os.path.join(os.path.dirname(sublime.packages_path()), os.path.normpath(MENU_PATH))
+    sidebar_path = os.path.join(menu, "Side Bar.sublime-menu")
+    context_path = os.path.join(menu, "Context.sublime-menu")
+    if not os.path.exists(menu):
+        os.makedirs(menu)
+
+    settings = sublime.load_settings('any_open.sublime-settings')
+    open_with = settings.get('open_with', {})
+
+    sidebar = []
+    context = []
+    for k, v in open_with.items():
+        for plat in v.get('platform', tuple()):
+            if plat in (_PLATFORM, '*'):
+                print('-----HERE-----')
+                where = v.get('menus', ('sidebar', 'context'))
+                if 'sidebar' in where:
+                    sidebar.append(
+                        {
+                            "command": "any_open_folder",
+                            "args": {"paths": [], "key": k}
+                        }
+                    )
+                if 'context' in where:
+                    context.append(
+                        {
+                            "command": "any_open_file",
+                            "args": {"paths": [], "key": k}
+                        }
+                    )
+
+    print(sidebar)
+    print(context)
+
+    with codecs.open(sidebar_path, 'w', encoding='utf-8') as f:
+        f.write(json.dumps(sidebar))
+
+    with codecs.open(context_path, 'w', encoding='utf-8') as f:
+        f.write(json.dumps(context))
+
+
+def plugin_loaded():
+    """Trigger a menu refresh if setting file is newer than menu file(s)."""
+
+    settings = sublime.load_settings('any_open.sublime-settings')
+    settings.clear_on_change('reload')
+    settings.add_on_change('reload', reload_menus)
+
+    menu = os.path.join(os.path.dirname(sublime.packages_path()), os.path.normpath(MENU_PATH))
+    if not os.path.exists(menu):
+        os.makedirs(menu)
+
+    triggered = False
+
+    sidebar = os.path.join(menu, "Side Bar.sublime-menu")
+    context = os.path.join(menu, "Context.sublime-menu")
+
+    if os.path.exists(sidebar):
+        mtime = os.path.getmtime(sidebar)
+        datetime.datetime.utcfromtimestamp(mtime)
+        mtimes = float(os.path.getmtime(sidebar))
+    else:
+        mtimes = -1
+
+    if os.path.exists(context):
+        mtime = os.path.getmtime(context)
+        datetime.datetime.utcfromtimestamp(mtime)
+        mtimec = float(os.path.getmtime(context))
+    else:
+        mtimec = -1
+
+    triggered = False
+    print(settings.get('last_update', 0.0))
+    print(float(mtimes), float(mtimec))
+    if float(settings.get('last_update', 0.0)) > float(mtimes):
+        settings.set('last_update', float(time.time()))
+        triggered = True
+    elif float(settings.get('last_update', 0.0)) > float(mtimec):
+        settings.set('last_update', float(time.time()))
+        triggered = True
+
+    print(triggered)
+    if triggered:
+        sublime.save_settings('any_open.sublime-settings')
