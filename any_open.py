@@ -4,43 +4,6 @@ AnyOpen Sublime Plugin.
 Sends a sidebar path or current view path to your favorite program.
 Multiple entries can be defined and you can limit them to a specific platform or file types.
 
-```js
-    "open_with": {
-        "win": {
-            "caption": "Grep Here…",
-            "cmd": "\"C:\\Program Files\\grepWin\\grepWin.exe\" /searchpath:\"${PATH}\"",
-            "platform": ["windows"]
-        },
-        "win_rummage": {
-            "caption": "Rummage Here…",
-            "cmd": ["c:\\Python35\\pythonw.exe", "-m", "rummage", "--path", "${PATH}"],
-            "platform": ["windows"]
-        },
-        "osx": {
-            "caption": "Rummage Here…",
-            "cmd": ["rummage", "--path", "${PATH}"],
-            "platform": ["osx"]
-        }
-    }
-```
-
-You can then define actual commands for the context menu or sidebar context menu:
-
-    Context menu:
-    ```js
-        {"command": "any_open_file", "args": {"key": "osx"}},
-        {"command": "any_open_file", "args": {"key": "win"}},
-        {"command": "any_open_file", "args": {"key": "win_rummage"}},
-    ```
-
-    Sidebar menu:
-
-    ```js
-        {"command": "any_open_folder", "args": {"paths": [], "key": "osx"}},
-        {"command": "any_open_folder", "args": {"paths": [], "key": "win"}},
-        {"command": "any_open_folder", "args": {"paths": [], "key": "win_rummage"}}
-    ```
-
 Licensed under MIT
 Copyright (c) 2013-2017 Isaac Muse <isaacmuse@gmail.com>
 
@@ -290,7 +253,6 @@ def reload_menus():
     for k, v in open_with.items():
         for plat in v.get('platform', tuple()):
             if plat in (_PLATFORM, '*'):
-                print('-----HERE-----')
                 where = v.get('menus', ('sidebar', 'context'))
                 if 'sidebar' in where:
                     sidebar.append(
@@ -306,9 +268,6 @@ def reload_menus():
                             "args": {"paths": [], "key": k}
                         }
                     )
-
-    print(sidebar)
-    print(context)
 
     with codecs.open(sidebar_path, 'w', encoding='utf-8') as f:
         f.write(json.dumps(sidebar))
@@ -348,8 +307,6 @@ def plugin_loaded():
         mtimec = -1
 
     triggered = False
-    print(settings.get('last_update', 0.0))
-    print(float(mtimes), float(mtimec))
     if float(settings.get('last_update', 0.0)) > float(mtimes):
         settings.set('last_update', float(time.time()))
         triggered = True
@@ -357,6 +314,5 @@ def plugin_loaded():
         settings.set('last_update', float(time.time()))
         triggered = True
 
-    print(triggered)
     if triggered:
         sublime.save_settings('any_open.sublime-settings')

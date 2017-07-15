@@ -15,7 +15,7 @@ Multiple entries can be defined and you can limit them to a specific platform an
             "exclude_folders": true,
             "filter": [".png", ".bmp", ".gif", ".jpg", ".jpeg", ".xcf"]
         },
-        "win": {
+        "win_grep": {
             "caption": "Grep Here…",
             "cmd": "\"C:\\Program Files\\grepWin\\grepWin.exe\" /searchpath:\"${PATH}\"",
             "platform": ["windows"]
@@ -25,7 +25,7 @@ Multiple entries can be defined and you can limit them to a specific platform an
             "cmd": ["c:\\Python35\\pythonw.exe", "-m", "rummage", "--path", "${PATH}"],
             "platform": ["windows"]
         },
-        "osx": {
+        "osx_rummage": {
             "caption": "Rummage Here…",
             "cmd": ["rummage", "--path", "${PATH}"],
             "platform": ["osx"]
