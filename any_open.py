@@ -5,7 +5,7 @@ Sends a sidebar path or current view path to your favorite program.
 Multiple entries can be defined and you can limit them to a specific platform or file types.
 
 Licensed under MIT
-Copyright (c) 2013-2017 Isaac Muse <isaacmuse@gmail.com>
+Copyright (c) 2013-2019 Isaac Muse <isaacmuse@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
 documentation files (the "Software"), to deal in the Software without restriction, including without limitation
@@ -44,10 +44,9 @@ else:
     _PLATFORM = "linux"
 
 
-def get_environ():
+def get_environ(adjust):
     """Get environment and force utf-8."""
 
-    import os
     env = {}
     env.update(os.environ)
 
@@ -62,6 +61,13 @@ def get_environ():
             bin_paths = result[1].split(':')
             if len(bin_paths):
                 env['PATH'] = ':'.join(bin_paths)
+
+    for k, v in adjust.items():
+        if v is None:
+            if k in env:
+                del env[k]
+        else:
+            env[k] = v
 
     env['PYTHONIOENCODING'] = 'utf8'
     env['LANG'] = 'en_US.UTF-8'
@@ -117,6 +123,7 @@ class AnyOpen(object):
         if obj is not None:
             call = obj.get('cmd', [])
             hide_window = obj.get('hide_window', False)
+            env_adjust = obj.get('env', {})
         if call is not None:
             is_string = isinstance(call, str)
             if is_string:
@@ -127,13 +134,14 @@ class AnyOpen(object):
                     call[index] = item.replace("${PATH}", target)
                     index += 1
             try:
+                current_env = get_environ(env_adjust)
                 if sublime.platform() == "windows":
                     startupinfo = subprocess.STARTUPINFO()
                     if hide_window:
                         startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-                    subprocess.Popen(call, startupinfo=startupinfo, env=get_environ(), shell=is_string)
+                    subprocess.Popen(call, startupinfo=startupinfo, env=current_env, shell=is_string)
                 else:
-                    subprocess.Popen(call, env=get_environ(), shell=is_string)
+                    subprocess.Popen(call, env=current_env, shell=is_string)
             except Exception:
                 self.fail("AnyOpen failed to open '%s'" % target, True)
                 self.fail(CALL_FAILURE % str(traceback.format_exc()))
