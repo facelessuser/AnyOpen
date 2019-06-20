@@ -35,6 +35,36 @@ Multiple entries can be defined and you can limit them to a specific platform an
 
 Commands can either be specified as an array of parameters, or as a string. Arrays directly create the process, while strings are executed as shell commands (what you specify is sent directly to your systems shell). While in most cases this may not matter, sometimes it does. Especially on Windows.
 
+### Environment
+
+You can modify the environment if desired via the `env` key. Any key value pair provided will be copied to the environment when the command is run. If the value is set to `null`, the key will be removed entirely.
+
+```js
+    "open_with": {
+        "win_rummage":
+        {
+            "caption": "Rummage Here…",
+            "cmd":
+            [
+                "pythonw",
+                "-m",
+                "rummage",
+                "--path",
+                "${PATH}"
+            ],
+            "env": {
+                "__COMPAT_LAYER": null
+            },
+            "platform":
+            [
+                "windows"
+            ]
+        }
+    }
+```
+
+With that said, the plugin generally expects the environment to be in `UTF-8`, so changing that is not advisable as that will most likely be overwritten regardless.
+
 ### Filtering
 
 Since paths can differ for different operating systems (especially on Windows), you must specify the `platform` for the command.  You can specify `windows`, `osx`, and/or `linux`. The `platform` key is an array and you can specify multiple platforms if needed.
@@ -88,7 +118,7 @@ Depending on how you call your application, a console might appear. This can occ
 ## License
 
 Licensed under MIT
-Copyright (c) 2013-2017 Isaac Muse <isaacmuse@gmail.com>
+Copyright (c) 2013-2019 Isaac Muse <isaacmuse@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
