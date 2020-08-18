@@ -1,3 +1,5 @@
+[![Build][github-ci-image]][github-ci-link]
+![License][license-image]
 # AnyOpen
 
 Send a file or folder to your favorite program. Works in sidebar context menus or view context menus.
@@ -152,3 +154,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+[github-ci-image]: https://github.com/facelessuser/sublime-markdown-popups/workflows/build/badge.svg?branch=master&event=push
+[github-ci-link]: https://github.com/facelessuser/sublime-markdown-popups/actions?query=workflow%3Abuild+branch%3Amaster
+[license-image]: https://img.shields.io/badge/license-MIT-blue.svg?labelColor=333333
