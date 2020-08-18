@@ -45,7 +45,7 @@ else:
 
 
 def get_environ(adjust):
-    """Get environment and force utf-8."""
+    """Get environment and force UTF-8."""
 
     env = {}
     env.update(os.environ)
@@ -80,12 +80,12 @@ class AnyOpen(object):
     """AnyOpen Here."""
 
     def is_text_cmd(self):
-        """Detect if TextCommand."""
+        """Detect if `TextCommand`."""
 
         return isinstance(self, sublime_plugin.TextCommand)
 
     def is_win_cmd(self):
-        """Detect if WindowCommand."""
+        """Detect if `WindowCommand`."""
 
         return isinstance(self, sublime_plugin.WindowCommand)
 
